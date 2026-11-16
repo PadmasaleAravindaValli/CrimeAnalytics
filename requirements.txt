@@ -6,3 +6,5 @@ seaborn
 xgboost
 torch
 joblib
+streamlit
+plotly
