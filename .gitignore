@@ -26,3 +26,10 @@ models/
 *.joblib
 __pycache__/
 .venv/
+
+# Temporary logs and binaries
+*.exe
+*.log
+*.lnk
+reference_materials/Major-project-github-ref/
+
