@@ -98,7 +98,7 @@ Venue \& Shift & \texttt{Is\_Night} & Binary flag for night shift hours (21:00 t
 & \texttt{Is\_Public\_Space} & Indicator for outdoor venues (Street, Sidewalk, Alley) & 1 \\
 Interaction & \texttt{Type\_Location\_Interaction} & Cross-product: $\text{Primary Type} \times \text{Location Description}$ & 1 \\
 Bayesian Priors & \texttt{Primary\_Type\_Domestic\_Risk} & Smoothed historical domestic rate per offense category & 1 \\
-& \texttt{Location\_Domestic_Risk} & Smoothed historical domestic rate per location venue & 1 \\
+& \texttt{Location\_Domestic\_Risk} & Smoothed historical domestic rate per location venue & 1 \\
 & \texttt{Beat\_Domestic\_Risk} & Smoothed historical domestic rate per police beat & 1 \\
 Spatial Volume & \texttt{Beat\_Historical\_Incident\_Volume} & Total baseline incident volume per police beat & 1 \\
 \bottomrule
@@ -132,6 +132,14 @@ Splits are contiguous calendar years (2021--23 / 2024 / 2025), so no incident sh
 \State Evaluate once on locked test: metrics, ablation, 22-district fairness
 \end{algorithmic}
 \end{algorithm}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.95\textwidth]{figures/fig1_overall_workflow.png}
+\caption{Dual-pipeline methodology workflow: Chicago CPD report-time domestic incident classification (Pipeline A) and Indian NCRB district-level sequential violent crime forecasting (Pipeline B).}
+\label{fig:workflow}
+\end{figure}
+
 
 \subsection{Decision Thresholds, Calibration, and Fairness Setup}
 A default 0.50 threshold under-detects the minority class, so we tune $\tau^*$ on validation data. Platt scaling and isotonic regression were fitted on the 2024 validation set only. The 2025 test set was never used for fitting calibrators, selecting thresholds or tuning hyperparameters. The 14.6\% uncalibrated ECE is largely due to \texttt{scale\_pos\_weight} $\approx 4.43$ inflating probabilities, which is why calibration helps.
@@ -167,6 +175,13 @@ Stacking Ensemble & Dataset 2 & 0.21 & 83.13\% & 83.18\% & 53.78\% & 83.26\% & 6
 }
 \end{table}
 
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.92\textwidth]{figures/fig2_chicago_model_comparison.png}
+\caption{Chicago CPD domestic violence classification performance comparison across architectures on Dataset 1 (Baseline) vs Dataset 2 (Enhanced), and ROC curves on the locked 2025 test cohort with operating threshold $\tau^* = 0.47$.}
+\label{fig:roc}
+\end{figure}
+
 \subsection{Systematic 7-Stage Feature Ablation Progression \& The AUC Jump}
 Table 4 reports the cumulative ablation progression.
 
@@ -193,6 +208,14 @@ $^*$*Footnote:* The 7-stage ablation evaluates cumulative feature blocks under a
 \textit{The AUC Jump:} The jump from 0.6876 to 0.9132 reflects that offence category and location type strongly determine whether an incident is domestic (e.g. Stalking 77.7\% vs. Theft $<1.5\%$; among domestic incidents, Apartments 46.8\%, Residences 44.5\%, Streets 7.1\%, Sidewalks 5.2\%); it is not evidence that space and time alone are predictive.\\
 \textit{LOGO Ablation:} Fig. 3b shows a Leave-One-Group-Out (LOGO) ablation: each feature group is removed in turn from the full model and the change in ROC-AUC is recorded. Dropping Bayesian priors costs the most ($-0.0009$), followed by spatial features ($-0.0007$) and the interaction feature ($-0.0002$); cyclical and venue/shift groups have no measurable effect ($\approx 0$).
 
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.92\textwidth]{figures/fig3_feature_progression_and_logo.png}
+\caption{(a) 7-Stage cumulative ROC-AUC progression demonstrating the $+0.2256$ category jump. (b) Leave-One-Group-Out (LOGO) ablation showing degradation when feature groups are excluded, with $\approx 0$ explicitly marked for cyclical and venue groups.}
+\label{fig:ablation}
+\end{figure}
+
+
 \subsection{Probability Calibration}
 \begin{table}[ht]
 \caption{Probability calibration evaluation on 2025 test cohort.}
@@ -213,6 +236,14 @@ Table 6 reports the fairness audit (Table 6, Fig. 6). Disparate impact ratios fo
 
 \begin{table}[ht]
 \caption{Complete 22-district algorithmic fairness audit with Wilson 95\% CIs (Table 6, Fig. 6).}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.92\textwidth]{figures/fig7_fairness_audit_districts.png}
+\caption{22-District algorithmic fairness audit on the 2025 test cohort: (a) Disparate impact ratio relative to reference District 24 with the EEOC 0.80--1.25 parity band highlighted. (b) Error rate disparities with Wilson 95\% CIs, proving equalized odds is not achieved across all beats.}
+\label{fig:fairness}
+\end{figure}
+
 \centering
 \resizebox{\textwidth}{!}{
 \begin{tabular}{llllll}
@@ -321,7 +352,7 @@ Label noise: preliminary classifications may differ from final outcomes [13]. Un
 \bibitem{ref9} Gautam, S.S., et al.: Clustering and classification of state-wise crime in India using machine learning. Int. J. Adv. Comput. Sci. Appl. \textbf{11}(9), 231--238 (2020).
 \bibitem{ref10} Zadrozny, B., Elkan, C.: Transforming classifier scores into accurate multiclass probability estimates. In: Proc. ACM SIGKDD, pp. 694--699 (2002). \url{https://doi.org/10.1145/775047.775151}
 \bibitem{ref11} Niculescu-Mizil, A., Caruana, R.: Predicting good probabilities with supervised learning. In: Proc. ICML, pp. 625--632 (2005). \url{https://doi.org/10.1145/1102351.1102430}
-\bibitem{ref12} Babu, B.R., et al.: A study on violent crime classification and prediction using decision trees on NCRB data. NeuroQuantology \textbf{20**(10), 5038--5046 (2022).
+\bibitem{ref12} Babu, B.R., et al.: A study on violent crime classification and prediction using decision trees on NCRB data. NeuroQuantology \textbf{20}(10), 5038--5046 (2022).
 \bibitem{ref13} Lum, K., Isaac, W.: To predict and serve? Significance \textbf{13}(5), 14--19 (2016). \url{https://doi.org/10.1111/j.1740-9713.2016.00960.x}
 \bibitem{ref14} Hardt, M., Price, E., Srebro, N.: Equality of opportunity in supervised learning. In: NeurIPS, vol. 29, pp. 3315--3323 (2016).
 \bibitem{ref15} Chouldechova, A.: Fair prediction with disparate impact: A study of bias in recidivism prediction instruments. Big Data \textbf{5}(2), 153--163 (2017). \url{https://doi.org/10.1089/big.2016.0047}

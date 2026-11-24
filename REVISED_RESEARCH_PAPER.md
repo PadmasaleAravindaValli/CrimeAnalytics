@@ -112,6 +112,10 @@ To reflect authentic operational deployment where models predict future events, 
 
 ### 3.5 Methodological Flowchart & Algorithmic Pseudocode
 
+![Fig. 1. Dual-Pipeline Methodology Workflow](figures/fig1_overall_workflow.png)
+*Fig. 1. Dual-pipeline methodology workflow: Chicago CPD report-time domestic incident classification (Pipeline A) and Indian NCRB district-level sequential violent crime forecasting (Pipeline B).*
+
+
 ```
 Algorithm 1: Leak-Free Incident Classification Protocol
 ────────────────────────────────────────────────────────────────────────────────────────
@@ -199,6 +203,10 @@ $^*$*Footnote on Stage 7:* The 7-stage ablation evaluates cumulative feature blo
 
 **Leave-One-Group-Out (LOGO) Ablation:**
 Fig. 3b shows a Leave-One-Group-Out (LOGO) ablation: each feature group is removed in turn from the full model and the change in ROC-AUC is recorded. Dropping Bayesian priors costs the most (−0.0009), followed by spatial features (−0.0007) and the interaction feature (−0.0002); cyclical and venue/shift groups have no measurable effect ($\approx 0$).
+
+![Fig. 3. 7-Stage Progression & LOGO Ablation](figures/fig3_feature_progression_and_logo.png)
+*Fig. 3. (a) 7-Stage cumulative ROC-AUC progression demonstrating the +0.2256 category jump. (b) Leave-One-Group-Out (LOGO) ablation showing degradation when feature groups are excluded, with ≈ 0 explicitly marked for cyclical and venue groups (Reviewer B7).*
+
 
 ### 4.3 Probability Calibration & Reliability Assessment
 Because tree ensembles trained with `scale_pos_weight ≈ 4.43` distort predicted probabilities, we calibrated output scores on the validation partition.
