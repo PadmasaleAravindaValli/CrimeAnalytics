@@ -217,6 +217,8 @@ $^*$*Footnote:* The 7-stage ablation evaluates cumulative feature blocks under a
 
 
 \subsection{Probability Calibration}
+Platt scaling and isotonic regression were fitted on the 2024 validation set only. The 2025 test set was never used for fitting calibrators, selecting thresholds, or tuning hyperparameters. Uncalibrated classification metrics in Table 3 evaluate raw discriminatory ranking, while the 14.60\% uncalibrated ECE is primarily driven by \texttt{scale\_pos\_weight} $\approx 4.43$ inflating output probabilities, which explains why isotonic calibration successfully collapses ECE to 0.47\%.
+
 \begin{table}[ht]
 \caption{Probability calibration evaluation on 2025 test cohort.}
 \centering
