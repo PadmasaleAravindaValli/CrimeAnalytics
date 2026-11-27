@@ -209,7 +209,7 @@ Fig. 3b shows a Leave-One-Group-Out (LOGO) ablation: each feature group is remov
 
 
 ### 4.3 Probability Calibration & Reliability Assessment
-Because tree ensembles trained with `scale_pos_weight ≈ 4.43` distort predicted probabilities, we calibrated output scores on the validation partition.
+Platt scaling and isotonic regression were fitted on the 2024 validation set only. The 2025 test set was never used for fitting calibrators, selecting thresholds, or tuning hyperparameters. Uncalibrated classification metrics in Table 3 evaluate raw discriminatory ranking, while the 14.60% uncalibrated ECE is primarily driven by `scale_pos_weight ≈ 4.43` inflating output probabilities, which explains why isotonic calibration successfully collapses ECE down to 0.47%.
 
 ### Table 5: Probability Calibration Evaluation on Locked 2025 Test Cohort
 | Calibration Method | Brier Score | Expected Calibration Error (ECE) | Log-Loss | Reliability Assessment |
