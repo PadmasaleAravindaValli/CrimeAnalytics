@@ -31,7 +31,7 @@ To resolve these challenges, this study establishes a leak-free computational fr
 - **(iv) Macro-Level Spatio-Temporal Sequence Forecasting:** We evaluate 3-year sequential memory models (GRU and LSTM) against tabular baselines on Indian National Crime Records Bureau (NCRB) panels, quantifying multi-seed stability and demonstrating that recurrent architectures capture temporal lag dependencies.
 
 ### 1.4 Paper Organization
-The remainder of this paper is structured as follows. Section 2 reviews related literature and highlights methodological vulnerability in published benchmarks. Section 3 details our data curation, leakage elimination, feature engineering, and experimental protocols. Section 4 presents comprehensive empirical results, ablation progressions, calibration curves, district fairness audits, and recurrent forecasting metrics. Section 5 provides a direct head-to-head comparison with existing literature. Section 6 concludes with operational limitations, public policy guardrails, and future research directions.
+The remainder of this paper is structured as follows. Section 2 reviews related literature and highlights methodological vulnerabilities in published benchmarks. Section 3 details our data curation, leakage elimination, feature engineering mathematical formulations, and experimental protocols. Section 4 presents comprehensive empirical results and discussion, including separate benchmarks for Dataset 1 and Dataset 2, 7-stage ablation progressions, probability calibration curves, district fairness audits, recurrent sequence forecasting, comparative discussion against prior art, and operational limitations. Section 5 concludes the paper with public policy guardrails and future scope. The Appendix provides an exhaustive reviewer feedback concordance matrix.
 
 ---
 
@@ -223,27 +223,33 @@ To guarantee exact numerical reproducibility across runs:
 
 ---
 
-## 4. Results and Empirical Comparative Analysis
+## 4. Results and Discussion
 
-### 4.1 Incident Classification Benchmark (Dataset 1 vs Dataset 2)
-Table 3 reports performance on the locked 2025 test cohort (236,329 incidents) across all evaluated architectures.
+### 4.1 Incident Classification Benchmark (Dataset 1 and Dataset 2)
+To rigorously evaluate the impact of domain feature engineering, models were trained and benchmarked separately on the Baseline configuration (Dataset 1: 11 model inputs) and the Domain-Engineered configuration (Dataset 2: 26 model inputs). All evaluations were conducted on the prospective locked 2025 test cohort (**236,329 clean incidents**). 
 
-### Table 3: Incident Classification Performance on Locked 2025 Test Cohort (Dataset 1 vs. Dataset 2)
-| Model Architecture | Feature Set | Optimal Cutoff $\tau^*$ | Test Accuracy | Balanced Acc | Precision | Recall | F1-Score | Test ROC-AUC |
-| :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| **XGBoost (Champion)** | **Dataset 2** | **0.47** | **81.31%** | **83.55%** | **50.63%** | **87.18%** | **64.06%** | **0.9152** |
-| XGBoost | Dataset 1 | 0.50 | 82.08% | 83.49% | 51.87% | 85.79% | 64.65% | 0.9137 |
-| **Logistic Regression** | **Dataset 2** | 0.50 | 82.30% | 83.53% | 52.24% | 85.53% | 64.86% | 0.9135 |
-| Logistic Regression | Dataset 1 | 0.49 | 81.41% | 82.90% | 50.80% | 85.31% | 63.68% | 0.9095 |
-| **HistGradientBoosting**| **Dataset 2** | 0.48 | 81.53% | 83.37% | 50.98% | 86.34% | 64.10% | 0.9136 |
-| HistGradientBoosting | Dataset 1 | 0.50 | 82.01% | 83.43% | 51.76% | 85.74% | 64.55% | 0.9133 |
-| **PyTorch Deep MLP** | **Dataset 2** | 0.52 | 81.60% | 83.47% | 51.09% | 86.50% | 64.24% | 0.9124 |
-| PyTorch Deep MLP | Dataset 1 | 0.56 | 82.52% | 83.13% | 52.66% | 84.12% | 64.77% | 0.9105 |
-| **Random Forest** | **Dataset 2** | 0.48 | 81.98% | 83.20% | 51.73% | 85.17% | 64.36% | 0.9084 |
-| Random Forest | Dataset 1 | 0.51 | 81.32% | 82.02% | 50.68% | 83.15% | 62.98% | 0.9018 |
-| **Stacking Meta-Ensemble**| **Dataset 2** | 0.21 | 83.13% | 83.18% | 53.78% | 83.26% | 65.35% | 0.9122 |
+Table 3a reports performance across all evaluated architectures on Dataset 1, while Table 3b details performance on Dataset 2.
 
-*Analysis of Findings:* Domain feature engineering in Dataset 2 consistently improves discriminative power across all models. Most remarkably, regularized Logistic Regression gained +0.0040 ROC-AUC and +0.63% Balanced Accuracy from Bayesian risk priors, rivaling complex non-linear architectures. XGBoost on Dataset 2 achieved the highest overall recall of 87.18% with an ROC-AUC of 0.9152, successfully flagging nearly 9 out of 10 domestic incidents at report time.
+### Table 3a: Incident Classification Performance on Dataset 1 (Baseline — 11 Model Inputs)
+| Model Architecture | Optimal Cutoff $\tau^*$ | Test Accuracy | Balanced Acc | Precision | Recall (TPR) | F1-Score | Test ROC-AUC |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| **XGBoost** | 0.50 | 82.08% | 83.49% | 51.87% | 85.79% | 64.65% | 0.9137 |
+| **HistGradientBoosting** | 0.50 | 82.01% | 83.43% | 51.76% | 85.74% | 64.55% | 0.9133 |
+| **PyTorch Deep Tabular MLP** | 0.56 | 82.52% | 83.13% | 52.66% | 84.12% | 64.77% | 0.9105 |
+| **Logistic Regression** | 0.49 | 81.41% | 82.90% | 50.80% | 85.31% | 63.68% | 0.9095 |
+| **Random Forest** | 0.51 | 81.32% | 82.02% | 50.68% | 83.15% | 62.98% | 0.9018 |
+
+### Table 3b: Incident Classification Performance on Dataset 2 (Domain-Engineered — 26 Model Inputs)
+| Model Architecture | Optimal Cutoff $\tau^*$ | Test Accuracy | Balanced Acc | Precision | Recall (TPR) | F1-Score | Test ROC-AUC |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| **XGBoost** | **0.47** | **81.31%** | **83.55%** | **50.63%** | **87.18%** | **64.06%** | **0.9152** |
+| **HistGradientBoosting** | 0.48 | 81.53% | 83.37% | 50.98% | 86.34% | 64.10% | 0.9136 |
+| **Logistic Regression** | 0.50 | 82.30% | 83.53% | 52.24% | 85.53% | 64.86% | 0.9135 |
+| **PyTorch Deep Tabular MLP** | 0.52 | 81.60% | 83.47% | 51.09% | 86.50% | 64.24% | 0.9124 |
+| **Stacking Meta-Ensemble** | 0.21 | 83.13% | 83.18% | 53.78% | 83.26% | 65.35% | 0.9122 |
+| **Random Forest** | 0.48 | 81.98% | 83.20% | 51.73% | 85.17% | 64.36% | 0.9084 |
+
+*Analysis of Findings:* Comparing Table 3a and Table 3b demonstrates that domain feature engineering in Dataset 2 consistently enhances discriminative power across all architectures. Regularized Logistic Regression gained +0.0040 ROC-AUC and +0.63% Balanced Accuracy solely from the inclusion of Bayesian historical risk priors, approaching non-linear tree performance. XGBoost on Dataset 2 achieved the highest overall recall of **87.18%** and an ROC-AUC of **0.9152** at an optimal threshold of $\tau^* = 0.47$, successfully identifying nearly 9 out of 10 domestic incidents at report time while preserving calibration integrity.
 
 ### 4.2 Systematic 7-Stage Feature Ablation Progression & The AUC Jump
 To quantify the exact marginal contribution of each feature group, we conducted a progressive 7-stage cumulative ablation.
@@ -345,7 +351,7 @@ These scores indicate that the model separates low-burden and high-burden distri
 
 ---
 
-## 5. Comparison with Existing Literature & Discussion
+### 4.6 Comparative Discussion with Prior Literature
 
 A rigorous contextualization of our empirical results against the broader body of computational criminology demonstrates both the performance advances and the ethical necessity of our leak-free methodology. Table 8 presents a structured methodological and empirical comparison.
 
@@ -358,24 +364,29 @@ A rigorous contextualization of our empirical results against the broader body o
 | **Gautam et al. [9]** | NCRB district clustering | Accuracy ~78% | Aggregate Counts | No (Static snapshot) | No | No |
 | **Ours** | **Chicago Domestic & NCRB 5-Tier** | **AUC 0.9152 / Macro F1 0.7097** | **Yes (Strict Purge)** | **Yes (Locked 2025 & 2013–14)**| **Yes (Isotonic ECE 0.47%)**| **Yes (22-District Audit)** |
 
-### 5.1 Deconstructing Headline Accuracies: Leakage vs. True Deployable Utility
-A cursory glance at Table 8 might suggest that prior studies reporting >95% accuracy [12, 18] outperformed our champion XGBoost model (81.31% Accuracy, 0.9152 ROC-AUC). However, a rigorous methodological audit reveals that these headline metrics are artifacts of severe target leakage and methodologically flawed validation splits:
+#### 4.6.1 Deconstructing Headline Accuracies: Leakage vs. True Deployable Utility
+A cursory glance at Table 8 might suggest that prior studies reporting >95% accuracy [12, 18] outperformed our top XGBoost model (81.31% Accuracy, 0.9152 ROC-AUC). However, a rigorous methodological audit reveals that these headline metrics are artifacts of severe target leakage and methodologically flawed validation splits:
 1. **Contamination via Retrospective Descriptors:** As demonstrated in Section 3.2, administrative crime logs contain descriptive and administrative fields created long after the incident occurred. Suresh et al. [18] incorporated unstructured text codes and categorical incident descriptors that often include the exact statutory charge (e.g., `"DOMESTIC BATTERY SIMPLE"`). When we intentionally retain `Description` in preliminary experiments, our model trivially achieves >99.2% accuracy and 0.998 ROC-AUC. However, such a model is fundamentally unusable for real-time dispatch triage because dispatchers do not possess the completed investigation description at the moment a 911 call is placed. By permanently purging `Description`, `Arrest`, `IUCR`, and `FBI Code`, our 0.9152 ROC-AUC and 87.18% recall reflect true operational discriminative power.
 2. **Temporal Independence vs. Random Shuffling:** Many previous studies evaluated models using standard random $k$-fold cross-validation or random 80/20 splits across multi-year spans [12, 18]. Random temporal splitting violates the fundamental arrow of time in predictive modeling: incidents from 2024 are used to predict incidents from 2021, and cyclical seasonal patterns are leaked across partitions. By strictly locking the 2025 calendar year (236,329 incidents) for Chicago and 2013–2014 for NCRB, our benchmarks measure true prospective generalization to unseen future operational periods.
 3. **Multi-Seed Recurrent Significance on NCRB:** In Indian NCRB crime analysis, prior works reported single-run decision tree or SVM accuracies without estimating stochastic variability [9, 12]. Our 5-seed benchmark demonstrates that while both LSTM (0.7097 ± 0.0066) and GRU (0.7083 ± 0.0076) substantially outperform the static baseline (0.1028 Macro F1), their performance difference is not statistically significant ($t = 0.345, p = 0.747$). This statistical rigor prevents researchers and practitioners from making over-fitted claims regarding neural architecture superiority.
 
-### 5.2 The Critical Role of Probability Calibration in Law Enforcement Triage
+#### 4.6.2 The Critical Role of Probability Calibration in Law Enforcement Triage
 Prior literature overwhelmingly reports raw uncalibrated classification metrics, ignoring the fact that tree models trained with class re-weighting produce severe probability distortions. In emergency dispatch, assigning an altercation a "0.85" probability when the true empirical domestic rate is only 35% leads to severe operational misallocations, alarm fatigue, and distrust among responders. By demonstrating that Isotonic Regression collapses Expected Calibration Error (ECE) from 14.60% to 0.47%, this work provides the first operational blueprint for calibrated probabilistic risk assessment in municipal incident management.
+
+### 4.7 Operational Limitations and Measurement Vulnerabilities
+While our framework establishes rigorous standards for prospective incident triage, several operational limitations must be explicitly acknowledged:
+1. **Label Noise and Preliminary Reporting Discrepancies:** Preliminary dispatch offense codes (`Primary Type`) reflect initial caller perceptions and rapid officer triage, which may differ from subsequent post-investigation judicial classifications [13]. 
+2. **Systemic Under-Reporting in Domestic Violence:** Official police records capture only reported incidents; domestic violence remains heavily under-reported due to fear of retaliation, financial dependence, and institutional distrust [5]. Models trained on reported calls cannot account for unrecorded altercations, potentially under-estimating latent risk in historically marginalized communities.
+3. **Deliberate Exclusion of Demographics to Prevent Proxy Bias:** Demographic variables (e.g., race, ethnicity, income) were deliberately excluded from all feature sets to avoid codifying systemic policing biases. However, because geographic coordinates and beat boundaries can serve as partial proxies for neighborhood demographics, continuous auditing remains necessary. Future work should investigate adversarial debiasing and constrained fair learning to bound localized error rate disparities.
 
 ---
 
-## 6. Limitations, Ethical Governance, and Future Scope
+## 5. Conclusion, Policy Governance, and Future Scope
 
-### 6.1 Limitations and Measurement Vulnerabilities
-Label noise: preliminary classifications may differ from final outcomes [13]. Under-reporting: recorded crime depends on reporting and policing practice [5]. No demographics: race and income were deliberately excluded to avoid proxy discrimination; future work should use constrained fair learning with aggregate vulnerability indices [5].
+This study establishes a leak-free, empirically audited computational framework for incident-level triage and macro-level spatio-temporal forecasting. Across 756,085 clean Chicago incidents, removing retrospective administrative fields and applying domain feature engineering enabled XGBoost to achieve 0.9152 ROC-AUC and 87.18% domestic recall on the locked 2025 test cohort. Post-hoc isotonic regression collapsed calibration error from 14.60% to 0.47%, while an algorithmic audit verified disparate impact parity within 0.80–1.25 across residential police beats. On Indian NCRB records, 3-year recurrent LSTM ($0.7097 \pm 0.0066$) and GRU ($0.7083 \pm 0.0076$) models demonstrated statistical parity ($p = 0.747$) in forecasting 5-tier violent crime burdens.
 
-### 6.2 Public Policy Governance & Operational Guardrails
-These models are strictly intended for report-time emergency dispatch triage—alerting dispatchers when an incoming call carries high domestic altercation likelihood so specialized crisis de-escalation units can be co-dispatched. They must never be used to guide punitive patrol allocations, individual profiling, or sentencing.
+### Public Policy Governance & Operational Guardrails
+We establish strict operational guardrails mandating that model outputs be used exclusively for defensive report-time emergency dispatch triage—specifically, triggering the co-dispatch of specialized domestic crisis de-escalation advocates and social workers alongside first responders. Under no circumstances should these models be utilized to justify punitive individual predictive policing, automated surveillance, biased patrol allocation, or bail and sentencing determinations. Future research will explore multi-modal integration of anonymized 911 audio transcripts and federated learning protocols across municipal agencies.
 
 ---
 

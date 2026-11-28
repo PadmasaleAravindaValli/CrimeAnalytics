@@ -181,8 +181,8 @@ To ensure full reproducibility and operational transparency, all experiments wer
 
 \textbf{Reproducibility Protocol:} Global seeds (\texttt{random\_state=42}) were enforced across data splits and tree routines. In PyTorch, determinism was enforced via \texttt{torch.manual\_seed(42)} and setting deterministic cuDNN flags. Multi-seed variance for recurrent architectures was evaluated across five seeds: $\{11, 23, 37, 53, 71\}$, reporting Mean $\pm$ SD and two-tailed paired t-tests.
 
-\section{Results and Empirical Comparative Analysis}
-\subsection{Incident Classification Benchmark (Dataset 1 vs Dataset 2)}
+\section{Results and Discussion}
+\subsection{Incident Classification Benchmark (Dataset 1 and Dataset 2)}
 Table 3 presents classification performance across all architectures on the locked 2025 test set (236,329 incidents).
 
 \begin{table}[ht]
@@ -353,7 +353,7 @@ Class 5 (Highest: $> 563$) & 0.9115 & 0.7543 & 0.8255 & 232 \\
 \end{table}
 These scores indicate that the model separates low-burden and high-burden districts reliably, while the intermediate classes (2--4) overlap because their class boundaries are arbitrary cut-points on a continuous count.
 
-\section{Comparison with Existing Literature \& Discussion}
+\subsection{Comparative Discussion with Prior Literature}
 A rigorous contextualization of our empirical results against the broader body of computational criminology demonstrates both the performance advances and the ethical necessity of our leak-free methodology. Table 8 presents a structured methodological and empirical comparison.
 
 \begin{table}[ht]
@@ -374,18 +374,26 @@ Gautam et al. [9] & NCRB district clustering & Accuracy $\sim$78\% & Aggregate C
 }
 \end{table}
 
-\subsection{Deconstructing Headline Accuracies: Leakage vs. True Deployable Utility}
-A cursory glance at Table 8 might suggest that prior studies reporting >95\% accuracy [12, 18] outperformed our champion XGBoost model (81.31\% Accuracy, 0.9152 ROC-AUC). However, a rigorous methodological audit reveals that these headline metrics are artifacts of severe target leakage and methodologically flawed validation splits:
+\subsubsection{Deconstructing Headline Accuracies: Leakage vs. True Deployable Utility}
+A cursory glance at Table 8 might suggest that prior studies reporting >95\% accuracy [12, 18] outperformed our top XGBoost model (81.31\% Accuracy, 0.9152 ROC-AUC). However, a rigorous methodological audit reveals that these headline metrics are artifacts of severe target leakage and methodologically flawed validation splits:
 \begin{enumerate}
     \item \textbf{Contamination via Retrospective Descriptors:} In municipal crime databases, descriptive and administrative fields are created long after incident occurrence. Suresh et al. [18] incorporated unstructured text codes and categorical incident descriptors that often include the exact statutory charge (e.g., \texttt{"DOMESTIC BATTERY SIMPLE"}). When \texttt{Description} is retained, models trivially achieve >99.2\% accuracy and 0.998 ROC-AUC. However, such models are fundamentally useless for real-time dispatch triage because dispatchers do not possess completed investigation logs when a 911 call arrives. By permanently purging \texttt{Description}, \texttt{Arrest}, \texttt{IUCR}, and \texttt{FBI Code}, our 0.9152 ROC-AUC and 87.18\% recall reflect true operational discriminative power.
     \item \textbf{Temporal Independence vs. Random Shuffling:} Many previous studies evaluated models using standard random $k$-fold cross-validation or random 80/20 splits across multi-year spans [12, 18]. Random temporal splitting violates the fundamental arrow of time: incidents from future years predict past events, and seasonal cyclical trends leak across splits. By strictly locking the 2025 calendar year (236,329 incidents) for Chicago and 2013--2014 for NCRB, our benchmarks measure true prospective generalization to unseen future operational periods.
     \item \textbf{Multi-Seed Recurrent Significance on NCRB:} In Indian NCRB crime analysis, prior works reported single-run decision tree or SVM accuracies without estimating stochastic variability [9, 12]. Our 5-seed benchmark demonstrates that while both LSTM ($0.7097 \pm 0.0066$) and GRU ($0.7083 \pm 0.0076$) substantially outperform the naive static baseline (0.1028 Macro F1), their performance difference is not statistically significant ($t = 0.345, p = 0.747$). This statistical rigor prevents unwarranted claims regarding architectural superiority.
 \end{enumerate}
 
-\subsection{The Critical Role of Probability Calibration in Law Enforcement Triage}
+\subsubsection{The Critical Role of Probability Calibration in Law Enforcement Triage}
 Prior literature overwhelmingly reports raw uncalibrated classification metrics, ignoring the fact that tree models trained with class re-weighting produce severe probability distortions. In emergency dispatch, assigning an altercation an uncalibrated probability of 0.85 when the empirical domestic rate is only 35\% produces alarm fatigue and misallocates scarce crisis intervention specialists. By demonstrating that Isotonic Regression collapses Expected Calibration Error (ECE) from 14.60\% to 0.47\%, this work provides the first operational blueprint for calibrated probabilistic risk assessment in municipal incident management.
 
-\section{Conclusion, Limitations, and Future Scope}
+\subsection{Operational Limitations and Measurement Vulnerabilities}
+While our framework establishes rigorous standards for prospective incident triage, several operational limitations must be explicitly acknowledged:
+\begin{enumerate}
+    \item \textbf{Label Noise and Preliminary Reporting Discrepancies:} Preliminary dispatch offense codes (\texttt{Primary Type}) reflect initial caller perceptions and rapid officer triage, which may differ from subsequent post-investigation judicial classifications [13].
+    \item \textbf{Systemic Under-Reporting in Domestic Violence:} Official police records capture only reported incidents; domestic violence remains heavily under-reported due to fear of retaliation, financial dependence, and institutional distrust [5]. Models trained on reported calls cannot account for unrecorded altercations, potentially under-estimating latent risk in historically marginalized communities.
+    \item \textbf{Deliberate Exclusion of Demographics to Prevent Proxy Bias:} Demographic variables (e.g., race, ethnicity, income) were deliberately excluded from all feature sets to avoid codifying systemic policing biases. However, because geographic coordinates and beat boundaries can serve as partial proxies for neighborhood demographics, continuous auditing remains necessary. Future work should investigate adversarial debiasing and constrained fair learning to bound localized error rate disparities.
+\end{enumerate}
+
+\section{Conclusion, Policy Governance, and Future Scope}
 Label noise: preliminary classifications may differ from final outcomes [13]. Under-reporting: recorded crime depends on reporting and policing practice [5]. No demographics: race and income were deliberately excluded to avoid proxy discrimination; future work should use constrained fair learning with aggregate vulnerability indices [5]. Operational deployment is restricted strictly to report-time emergency dispatch triage decision support, explicitly rejecting punitive individual predictive policing.
 
 \begin{thebibliography}{18}
