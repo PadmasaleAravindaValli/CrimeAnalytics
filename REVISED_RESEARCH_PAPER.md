@@ -134,7 +134,7 @@ To reflect authentic operational deployment where models predict future events, 
 ### 3.5 Methodological Flowchart & Algorithmic Pseudocode
 
 ![Fig. 1. Dual-Pipeline Methodology Workflow](figures/fig1_overall_workflow.png)
-*Fig. 1. Dual-pipeline methodology workflow: Chicago CPD report-time domestic incident classification (Pipeline A) and Indian NCRB district-level sequential violent crime forecasting (Pipeline B).*
+*Fig. 1. End-to-end proposed methodology flowchart: Data ingestion, target leakage elimination, feature engineering sets (11 baseline vs. 26 domain-engineered inputs for Chicago CPD; 6 baseline groups vs. 11 sequential features for Indian NCRB), chronological splitting, model development, and comprehensive evaluation protocols.*
 
 
 ```
